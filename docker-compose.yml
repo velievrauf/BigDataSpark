@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: postgres
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: 4321
+      POSTGRES_DB: petshop_db
+    ports:
+      - "5433:5432"
+    volumes:
+      - ./data:/data
+      - ./init_db:/docker-entrypoint-initdb.d/
+
+  clickhouse:
+    image: clickhouse/clickhouse-server:latest
+    container_name: clickhouse
+    environment:
+      - CLICKHOUSE_USER=admin
+      - CLICKHOUSE_PASSWORD=4321
+      - CLICKHOUSE_DB=petshop_reports
+    ports:
+      - "8123:8123"
+      - "9000:9000"
+
+  pyspark:
+    image: jupyter/pyspark-notebook:spark-3.5.0
+    container_name: pyspark
+    ports:
+      - "8888:8888" 
+      - "4040:4040" 
+    volumes:
+      - ./spark_jobs:/home/jovyan/work
+    depends_on:
+      - postgres
+      - clickhouse
+    user: root
+    command: "start-notebook.sh --NotebookApp.token=''"
